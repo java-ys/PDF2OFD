@@ -19,15 +19,13 @@ public class OFDRender {
     private static final float POINTS_PER_MM = 1 / (10 * 2.54f) * 72;
 
     public static byte[] convertPdfToOfd(byte[] pdfBytes) {
-        long start;
-        long end;
-
         String tempFilePath = generateTempFilePath();
         PDDocument doc = null;
         try {
             FileUtils.writeByteArrayToFile(new File(tempFilePath), pdfBytes);
             doc = PDDocument.load(new File(tempFilePath));
-            start = System.currentTimeMillis();
+
+            long parseStart = System.currentTimeMillis();
             OFDCreator ofdCreator = new OFDCreator();
             for (int i = 0; i < doc.getNumberOfPages(); i++) {
                 ofdCreator.addPage(i);
@@ -38,10 +36,13 @@ public class OFDRender {
                 ofdPageDrawer.drawPage();
                 ofdCreator.addPageContent(i, ofdPageDrawer.getCtLayer(), widthPt / POINTS_PER_MM, heightPt / POINTS_PER_MM);
             }
-            end = System.currentTimeMillis();
-            logger.info("parse speed time {}", end - start);
+            long parseEnd = System.currentTimeMillis();
+            logger.info("parse speed time {}", parseEnd - parseStart);
+
+            long genStart = System.currentTimeMillis();
             byte[] ofdBytes = ofdCreator.jar();
-            logger.info("gen ofd speed time {}", end - start);
+            long genEnd = System.currentTimeMillis();
+            logger.info("gen ofd speed time {}", genEnd - genStart);
             return ofdBytes;
         } catch (Exception e) {
             e.printStackTrace();
